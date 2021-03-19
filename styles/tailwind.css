@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.dark-text-color {
+    color:#1b1717
+}
+
+.form-card {
+    width: '30%'
+}
+@media screen and (min-width: 960px){
+    .form-card {
+        width: '90%';
+    }
+}
+button:focus, button:active {
+    outline: none
+}

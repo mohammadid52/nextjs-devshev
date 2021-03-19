@@ -1,0 +1,33 @@
+{
+  "name": "devshev",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev && craco start",
+    "build": "next build && craco build",
+    "start": "next start && craco start"
+  },
+  "dependencies": {
+    "@craco/craco": "^6.1.1",
+    "eslint-plugin-react": "^7.22.0",
+    "firebase": "^8.3.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1",
+    "next": "10.0.9",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-icons": "^4.2.0",
+    "react-redux": "^7.2.2",
+    "react-redux-firebase": "^3.10.0",
+    "redux": "^4.0.5",
+    "redux-firestore": "^0.15.0",
+    "redux-thunk": "^2.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss7-compat": "^2.0.3",
+    "autoprefixer": "^10.2.5",
+    "postcss": "^8.2.8",
+    "postcss-preset-env": "^6.7.0",
+    "tailwindcss": "^2.0.3"
+  }
+}
