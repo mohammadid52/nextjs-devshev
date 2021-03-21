@@ -3,6 +3,10 @@ import { useState, useCallback } from "react";
 const useForm = (initialState, setError) => {
   const [values, setValues] = useState(initialState);
 
+  const clearAllFields = () => {
+    setValues(initialState);
+  };
+
   function ValidateEmail(mail) {
     if (
       /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(
@@ -33,6 +37,7 @@ const useForm = (initialState, setError) => {
     values,
     handleChangeValue,
     ValidateEmail,
+    clearAllFields,
   };
 };
 

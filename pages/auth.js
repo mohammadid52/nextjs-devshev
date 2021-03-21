@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AiOutlineUser,
   AiOutlineMail,
@@ -7,28 +7,72 @@ import {
   AiOutlineEye,
 } from "react-icons/ai";
 import { MdClear } from "react-icons/md";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useDispatch, useSelector } from "react-redux";
 import { useFirebase } from "react-redux-firebase";
 
 import { useForm } from "../hooks";
 import { Meta } from "../components";
-import { authActions } from "../store/actions";
-import { useDispatch, useSelector } from "react-redux";
+import { authActions } from "../store/action";
 
-const { signIn, signUp, logOut } = authActions;
+const { signIn, signUp } = authActions;
+
+const InputField = ({
+  placeholder,
+  onChange,
+  value,
+  icon: Icon,
+  field,
+  classes = "",
+  other,
+  ClearButton,
+  password,
+}) => {
+  return (
+    <div
+      className={`h-12 overflow-hidden relative flex items-center justify-start mb-4 rounded-md bg-white border border-gray-300 ${classes}`}
+    >
+      <span className="h-full w-10 flex justify-center border-r border-gray-300 items-center bg-inherit">
+        {<Icon color="#1f4068" />}
+      </span>
+      <input
+        value={value}
+        onChange={onChange}
+        name={field}
+        type={field === "password" ? password : field}
+        placeholder={placeholder}
+        style={{ caretColor: "red", color: "var(--dark-1)" }}
+        className="px-3 outline-none h-full bg-inherit font-medium placeholder-gray-300"
+      />
+      {other || <ClearButton field={field} />}
+    </div>
+  );
+};
 
 const Auth = () => {
   //booleans
   const [securePass, setSecurePass] = useState(true);
   const [isSignup, setIsSignup] = useState(true);
 
-  const state = useSelector((state) => state.auth);
-  const { authenticating, error: _error } = state;
-
   const firebase = useFirebase();
 
-  const [error, setError] = useState(_error);
-
   const dispatch = useDispatch();
+  const { authenticating } = useSelector((state) => state.firebase.auth);
+
+  const [error, setError] = useState(null);
+
+  const auth = useSelector((state) => state.firebase.auth);
+  const { uid, isEmpty, isLoaded } = auth;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && !isEmpty && uid) {
+      router.push("/");
+      return;
+    }
+  }, [uid, isEmpty, isLoaded]);
+
   const shouldShowCancel = (field) => values[field].length > 0;
 
   const initialFields = {
@@ -37,10 +81,13 @@ const Auth = () => {
     email: "",
   };
 
-  const { handleChangeValue, ValidateEmail, values, resetField } = useForm(
-    initialFields,
-    setError
-  );
+  const {
+    handleChangeValue,
+    clearAllFields,
+    ValidateEmail,
+    values,
+    resetField,
+  } = useForm(initialFields, setError);
 
   const { email, password, username } = values;
   const handleAction = (e) => {
@@ -69,21 +116,19 @@ const Auth = () => {
       e.preventDefault();
 
       if (isSignup) {
-        dispatch(signUp(values, redirect));
+        dispatch(signUp(values, () => router.push("/")));
       } else {
-        dispatch(signIn(values));
+        dispatch(signIn(values, () => router.push("/")));
       }
     }
   };
-
-  const redirect = () => null;
 
   const ClearButton = ({ field, other = null }) => {
     return (
       <div className="absolute right-4">
         {shouldShowCancel(field) && (
           <button onClick={() => resetField(field)} className="">
-            <MdClear color="rgb(55, 65, 81)" />
+            <MdClear color="var(--dark-1)" />
           </button>
         )}
         {other}
@@ -91,26 +136,8 @@ const Auth = () => {
     );
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      await firebase.login({ type: "redirect", provider: "google" });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const signInWithGithub = async () => {
-    try {
-      await firebase.login({ type: "redirect", provider: "github" });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
-    <div
-      style={{ background: "#0f3460" }}
-      className="h-screen w-screen flex flex-col justify-center items-center"
-    >
+    <div className="relative h-screen w-screen flex flex-col justify-center items-center bg-dark-1">
       <Meta
         description="signup to DevShev"
         keywords="signup to DevShev, signin to DevShev, login to DevShev, web development, React, next, components"
@@ -120,25 +147,21 @@ const Auth = () => {
         <h1 className="text-3xl font-semibold text-white text-center my-4">
           DevShev
         </h1>
-        <main className="shadow-xl rounded w-96 h-auto bg-white">
+        <main className="shadow-xl rounded-lg w-96 h-auto bg-white">
           <div>
-            <div className="flex items-center w-full rounded">
+            <div className="flex items-center w-full">
               <button
                 onClick={() => setIsSignup(true)}
-                className={`w-1/2 flex text-lg font-bold focus:outline-none flex-col items-center justify-center ${
-                  !isSignup
-                    ? " text-blue-900 bg-gray-50 shadow-inner border border-blue-300"
-                    : "bg-white"
+                className={`w-1/2 flex rounded-tl-lg text-lg font-medium focus:outline-none flex-col items-center justify-center ${
+                  !isSignup ? "inner-shadeow bg-gray-50" : "bg-white"
                 } h-16`}
               >
                 Sign up
               </button>
               <button
                 onClick={() => setIsSignup(false)}
-                className={`w-1/2 text-lg  font-bold flex flex-col focus:outline-none items-center justify-center ${
-                  isSignup
-                    ? "text-blue-900 bg-gray-50 shadow-inner border border-blue-300"
-                    : "bg-white"
+                className={`w-1/2 text-lg font-medium rounded-tr-lg flex flex-col focus:outline-none items-center justify-center ${
+                  isSignup ? "inner-shadoew bg-gray-50" : "bg-white"
                 } h-16`}
               >
                 Sign in
@@ -148,81 +171,70 @@ const Auth = () => {
             <div className="flex flex-col m-6 pb-8 px-4">
               <div className="w-full flex mb-4 items-center justify-center">
                 <button
-                  onClick={signInWithGoogle}
-                  className="hover:bg-red-400 transition-all bg-red-500 rounded-md w-1/2 h-10 mr-2 flex items-center justify-center"
+                  onClick={() =>
+                    firebase.login({ provider: "google", type: "redirect" })
+                  }
+                  className="hover:bg-red-600 transition-all bg-red-600 rounded-md w-1/2 h-10 mr-2 flex items-center justify-center"
                 >
                   <p className="text-white font-semibold">Google</p>
                 </button>
                 <button
-                  onClick={signInWithGithub}
+                  onClick={() =>
+                    firebase.login({ provider: "github", type: "redirect" })
+                  }
                   className="hover:bg-gray-700 transition-all bg-gray-800 rounded-md w-1/2 h-10 ml-2 flex items-center justify-center"
                 >
                   <p className="text-white font-semibold">Github</p>
                 </button>
               </div>
-              <div className="h-12 border relative border-gray-300 flex items-center justify-start mb-4 rounded-md">
-                <span className="h-full bg-gray-100 w-10 flex justify-center items-center border-r-2">
-                  <AiOutlineUser color="rgb(55, 65, 81)" />
-                </span>
-                <input
-                  value={username}
-                  onChange={handleChangeValue}
-                  name="username"
-                  type="username"
-                  placeholder={isSignup ? "Username" : "Username or email"}
-                  className="px-3 outline-none text-gray-700 "
-                />
-                <ClearButton field="username" />
-              </div>
-
               {isSignup && (
-                <div className="h-12 border relative border-gray-300 flex items-center justify-start mb-4 rounded-md">
-                  <span className="h-full bg-gray-100 w-10 flex justify-center items-center border-r-2">
-                    <AiOutlineMail color="rgb(55, 65, 81)" />
-                  </span>
-                  <input
-                    value={email}
-                    onChange={handleChangeValue}
-                    name="email"
-                    placeholder="Email"
-                    type="email"
-                    className="px-3 outline-none text-gray-700"
-                  />
-                  <ClearButton field="email" />
-                </div>
-              )}
-              <div
-                className={`h-12 border relative border-gray-300 flex items-center justify-start rounded-md ${
-                  error ? "mb-3" : "mb-5"
-                }`}
-              >
-                <span className="h-full bg-gray-100 w-10 flex justify-center items-center border-r-2">
-                  <AiOutlineLock color="rgb(55, 65, 81)" />
-                </span>
-                <input
-                  value={password}
+                <InputField
+                  icon={AiOutlineUser}
+                  value={username}
+                  placeholder={"Username"}
+                  field="username"
                   onChange={handleChangeValue}
-                  name="password"
-                  placeholder="Password"
-                  type={securePass ? "password" : ""}
-                  className="px-3 outline-none text-gray-700"
+                  ClearButton={ClearButton}
                 />
-                <ClearButton
-                  field="password"
-                  other={
-                    <button
-                      onClick={() => setSecurePass(!securePass)}
-                      className="ml-2"
-                    >
-                      {securePass ? (
-                        <AiOutlineEye color="rgb(55, 65, 81)" />
-                      ) : (
-                        <AiOutlineEyeInvisible color="rgb(55, 65, 81)" />
-                      )}
-                    </button>
-                  }
-                />
-              </div>
+              )}
+
+              <InputField
+                icon={AiOutlineMail}
+                value={email}
+                placeholder={"Email"}
+                field="email"
+                onChange={handleChangeValue}
+                ClearButton={ClearButton}
+              />
+
+              <InputField
+                icon={AiOutlineLock}
+                value={password}
+                placeholder={"Password"}
+                field={"password"}
+                password={securePass ? "password" : "text"}
+                onChange={handleChangeValue}
+                ClearButton={ClearButton}
+                classes={error ? "mb-3" : "mb-5"}
+                other={
+                  <ClearButton
+                    field="password"
+                    other={
+                      <button
+                        onClick={() => setSecurePass(!securePass)}
+                        className="ml-2"
+                      >
+                        {securePass ? (
+                          <AiOutlineEye color="var(--dark)" />
+                        ) : (
+                          <AiOutlineEyeInvisible color="var(--dark)" />
+                        )}
+                      </button>
+                    }
+                  />
+                }
+              />
+
               {error && (
                 <div className="mb-2">
                   <p className="text-red-600 text-md text-center italic font-medium">
@@ -244,6 +256,11 @@ const Auth = () => {
                     : "Sign in"}
                 </p>
               </button>
+              <div className="text-right text-blue-700 underline">
+                <Link href="/">
+                  <p className="text-sm">Forgot Password</p>
+                </Link>
+              </div>
             </div>
           </div>
         </main>

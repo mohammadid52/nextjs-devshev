@@ -1,15 +1,14 @@
-import "../styles/tailwind.css";
+import "../styles/globals.css";
 import "tailwindcss/tailwind.css";
-import "react-notifications-component/dist/theme.css";
 
 import { Provider } from "react-redux";
-import firebase from "../firebase";
 import { ReactReduxFirebaseProvider } from "react-redux-firebase";
+import { firebase } from "../firebase";
 import { createFirestoreInstance } from "redux-firestore";
 
 import { Layout } from "../components";
-import store from "../store";
 import { rrfConfig } from "../config";
+import store from "../store";
 
 const rrfProps = {
   firebase,

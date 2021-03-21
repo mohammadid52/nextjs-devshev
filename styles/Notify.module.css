@@ -1,0 +1,11 @@
+.notify {
+  transition: all 0.3s ease-in-out;
+}
+
+.notify.hide {
+  transform: translateY(150px);
+}
+.notify.show {
+  transform: translateY(0px);
+  visibility: visible;
+}
